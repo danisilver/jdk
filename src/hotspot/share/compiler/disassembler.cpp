@@ -41,6 +41,9 @@
 #include "runtime/stubRoutines.hpp"
 #include "utilities/resourceHash.hpp"
 #include CPU_HEADER(depChecker)
+#ifdef SHARK
+#include "shark/sharkEntry.hpp"
+#endif
 
 void*       Disassembler::_library               = NULL;
 bool        Disassembler::_tried_to_load_library = false;
@@ -923,10 +926,19 @@ void Disassembler::decode(nmethod* nm, outputStream* st) {
   nm->print_constant_pool(env.output());
   env.output()->print_cr("--------------------------------------------------------------------------------");
   env.output()->cr();
+
+#ifdef SHARK
+  SharkEntry* entry = (SharkEntry *) nm->code_begin();
+  address p = entry->code_start();
+  address end = nm->code_limit(); 
+#else
+  address p = nm->code_begin();
+  address end = nm->code_end(); 
+#endif
   if (is_abstract()) {
-    AbstractDisassembler::decode_abstract(nm->code_begin(), nm->code_end(), env.output(), Assembler::instr_maxlen());
+    AbstractDisassembler::decode_abstract(p, end, env.output(), Assembler::instr_maxlen());
   } else {
-    env.decode_instructions(nm->code_begin(), nm->code_end());
+    env.decode_instructions(p, end);
   }
   env.output()->print_cr("--------------------------------------------------------------------------------");
 #endif

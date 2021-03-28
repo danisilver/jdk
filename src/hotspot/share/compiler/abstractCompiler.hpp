@@ -147,6 +147,7 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   bool is_c1() const                     { return _type == compiler_c1; }
   bool is_c2() const                     { return _type == compiler_c2; }
   bool is_jvmci() const                  { return _type == compiler_jvmci; }
+  bool is_shark() const                  { return _type == compiler_shark; }
   CompilerType type() const              { return _type; }
 
   // Customization

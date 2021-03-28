@@ -38,13 +38,16 @@
 #ifdef COMPILER2
 #include "opto/c2_globals_pd.hpp"
 #endif // COMPILER2
+#ifdef SHARK
+#include "shark/shark_globals_zero.hpp"
+#endif //SHARK
 
 // JVMCI has no platform-specific global definitions
 //#if INCLUDE_JVMCI
 //#include "jvmci/jvmci_globals_pd.hpp"
 //#endif
 
-#if !defined(COMPILER1) && !defined(COMPILER2) && !INCLUDE_JVMCI
+#if !defined(COMPILER1) && !defined(COMPILER2) && !INCLUDE_JVMCI && !defined(SHARK)
 define_pd_global(bool, BackgroundCompilation,        false);
 define_pd_global(bool, CICompileOSR,                 false);
 define_pd_global(bool, UseTypeProfile,               false);

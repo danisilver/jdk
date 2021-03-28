@@ -76,6 +76,9 @@
 #if INCLUDE_JVMCI
 #include "jvmci/jvmciRuntime.hpp"
 #endif
+#ifdef SHARK
+#include "shark/sharkCompiler.hpp"
+#endif
 
 #ifdef DTRACE_ENABLED
 
@@ -248,6 +251,12 @@ static void note_java_nmethod(nmethod* nm) {
 #if INCLUDE_JVMCI
   if (nm->is_compiled_by_jvmci()) {
     jvmci_java_nmethod_stats.note_nmethod(nm);
+  } else
+#endif
+#if SHARK
+  if (nm->is_compiled_by_shark()) {
+    //jvmci_java_nmethod_stats.note_nmethod(nm);
+    //TODO: averiguar
   } else
 #endif
   {
@@ -1518,6 +1527,10 @@ void nmethod::flush() {
   Universe::heap()->flush_nmethod(this);
   CodeCache::unregister_old_nmethod(this);
 
+#ifdef SHARK
+  ((SharkCompiler *) compiler)->free_compiled_method(insts_begin());
+#endif // SHARK
+
   CodeBlob::flush();
   CodeCache::free(this);
 }
@@ -2503,6 +2516,8 @@ void nmethod::print(outputStream* st) const {
     st->print("(c2) ");
   } else if (is_compiled_by_jvmci()) {
     st->print("(JVMCI) ");
+  } else if (is_compiled_by_shark()) {
+    st->print("(shark) ");
   } else {
     st->print("(n/a) ");
   }

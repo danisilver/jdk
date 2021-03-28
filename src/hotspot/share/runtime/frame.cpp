@@ -1071,6 +1071,10 @@ void frame::oops_do_internal(OopClosure* f, CodeBlobClosure* cf, const RegisterM
     oops_entry_do(f, map);
   } else if (CodeCache::contains(pc())) {
     oops_code_blob_do(f, cf, map, derived_mode);
+#ifdef SHARK
+  } else if (is_fake_stub_frame()) {
+     // nothing to do
+#endif // SHARK
   } else {
     ShouldNotReachHere();
   }

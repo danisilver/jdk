@@ -95,7 +95,11 @@ int Abstract_VM_Version::_vm_build_number = VERSION_BUILD;
     #define VMTYPE "Server"
   #else // COMPILER1_AND_COMPILER2
   #ifdef ZERO
-    #define VMTYPE "Zero"
+  #ifdef SHARK
+  #define VMTYPE "Shark"
+  #else //SHARK
+  #define VMTYPE "Zero"
+  #endif //SHARK
   #else // ZERO
      #define VMTYPE COMPILER1_PRESENT("Client")   \
                     COMPILER2_PRESENT("Server")

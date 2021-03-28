@@ -36,6 +36,7 @@ enum CompilerType {
   compiler_c1,
   compiler_c2,
   compiler_jvmci,
+  compiler_shark,
   compiler_number_of_types
 };
 

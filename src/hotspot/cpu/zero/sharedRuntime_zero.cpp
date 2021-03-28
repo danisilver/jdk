@@ -42,6 +42,10 @@
 #ifdef COMPILER2
 #include "opto/runtime.hpp"
 #endif
+#ifdef SHARK
+#include "compiler/compileBroker.hpp"
+#include "shark/sharkCompiler.hpp"
+#endif
 
 
 static address zero_null_code_stub() {
@@ -76,8 +80,16 @@ nmethod *SharedRuntime::generate_native_wrapper(MacroAssembler *masm,
                                                 VMRegPair *regs,
                                                 BasicType ret_type,
                                                 address critical_entry) {
+#ifdef SHARK
+  return SharkCompiler::compiler()->generate_native_wrapper(masm,
+                                                            method,
+                                                            compile_id,
+                                                            sig_bt,
+                                                            ret_type);
+#else
   ShouldNotCallThis();
   return NULL;
+#endif // SHARK
 }
 
 int Deoptimization::last_frame_adjust(int callee_parameters,

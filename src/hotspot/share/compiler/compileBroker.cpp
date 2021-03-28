@@ -81,6 +81,9 @@
 #ifdef COMPILER2
 #include "opto/c2compiler.hpp"
 #endif
+#ifdef SHARK
+#include "shark/sharkCompiler.hpp"
+#endif
 
 #ifdef DTRACE_ENABLED
 
@@ -683,6 +686,11 @@ void CompileBroker::compilation_init_phase1(Thread* THREAD) {
    }
 #endif // INCLUDE_JVMCI
 
+#ifdef SHARK
+   if(_c2_count <= 0) _c2_count = 1;
+   _compilers[1] = new SharkCompiler();
+#endif
+
   // Start the compiler thread(s) and the sweeper thread
   init_compiler_sweeper_threads();
   // totalTime performance counter is always created as it is required
@@ -968,7 +976,7 @@ void CompileBroker::init_compiler_sweeper_threads() {
 
   // Ensure any exceptions lead to vm_exit_during_initialization.
   EXCEPTION_MARK;
-#if !defined(ZERO)
+#if !defined(ZERO) && !defined(SHARK)
   assert(_c2_count > 0 || _c1_count > 0, "No compilers?");
 #endif // !ZERO
   // Initialize the compilation queue
@@ -1413,7 +1421,7 @@ nmethod* CompileBroker::compile_method(const methodHandle& method, int osr_bci,
 
   assert(!HAS_PENDING_EXCEPTION, "No exception should be present");
   // some prerequisites that are compiler specific
-  if (comp->is_c2()) {
+  if (comp->is_c2() || comp->is_shark()) {
     method->constants()->resolve_string_constants(CHECK_AND_CLEAR_NONASYNC_NULL);
     // Resolve all classes seen in the signature of the method
     // we are compiling.
@@ -1792,7 +1800,9 @@ bool CompileBroker::init_compiler_runtime() {
     ThreadInVMfromNative tv(thread);
 
     // Perform per-thread and global initializations
-    comp->initialize();
+    if(!comp->is_shark()){
+	comp->initialize();
+    }
   }
 
   if (comp->is_failed()) {

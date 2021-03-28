@@ -35,7 +35,10 @@
 #endif // COMPILER2
 #if INCLUDE_JVMCI
 #include "jvmci/jvmci_globals.hpp"
-#endif
+#endif //INCLUDE_JVMCI
+#ifdef SHARK 
+#include "shark/shark_globals.hpp"
+#endif //SHARK
 
 // TODO -- currently, even if all JIT compilers are disabled, the following flags
 // are still available in HotSpot. This should eventually be fixed ...

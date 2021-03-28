@@ -121,6 +121,7 @@ class ZeroStack {
 
 class EntryFrame;
 class InterpreterFrame;
+class SharkFrame;
 class FakeStubFrame;
 
 //
@@ -150,6 +151,7 @@ class ZeroFrame {
   enum FrameType {
     ENTRY_FRAME = 1,
     INTERPRETER_FRAME,
+    SHARK_FRAME,
     FAKE_STUB_FRAME
   };
 
@@ -178,6 +180,9 @@ class ZeroFrame {
   bool is_interpreter_frame() const {
     return type() == INTERPRETER_FRAME;
   }
+  bool is_shark_frame() const {
+    return type() == SHARK_FRAME;
+  }
   bool is_fake_stub_frame() const {
     return type() == FAKE_STUB_FRAME;
   }
@@ -190,6 +195,10 @@ class ZeroFrame {
   InterpreterFrame *as_interpreter_frame() const {
     assert(is_interpreter_frame(), "should be");
     return (InterpreterFrame *) this;
+  }
+  SharkFrame *as_shark_frame() const {
+    assert(is_shark_frame(), "should be");
+    return (SharkFrame *) this;
   }
   FakeStubFrame *as_fake_stub_frame() const {
     assert(is_fake_stub_frame(), "should be");

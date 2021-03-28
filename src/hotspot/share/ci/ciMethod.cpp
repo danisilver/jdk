@@ -55,6 +55,10 @@
 #include "ci/ciTypeFlow.hpp"
 #include "oops/method.hpp"
 #endif
+#ifdef SHARK
+#include "ci/ciTypeFlow.hpp"
+#include "oops/method.hpp"
+#endif
 
 // ciMethod
 //
@@ -97,10 +101,10 @@ ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) :
   _exception_handlers = NULL;
   _liveness           = NULL;
   _method_blocks = NULL;
-#if defined(COMPILER2)
+#if defined(COMPILER2) || defined(SHARK)
   _flow               = NULL;
   _bcea               = NULL;
-#endif // COMPILER2
+#endif // COMPILER2 || SHARK
 
   ciEnv *env = CURRENT_ENV;
   if (env->jvmti_can_hotswap_or_post_breakpoint()) {
@@ -175,7 +179,7 @@ ciMethod::ciMethod(ciInstanceKlass* holder,
   _instructions_size(-1),
   _can_be_statically_bound(false),
   _liveness(               NULL)
-#if defined(COMPILER2)
+#if defined(COMPILER2) || defined(SHARK)
   ,
   _flow(                   NULL),
   _bcea(                   NULL)
@@ -278,6 +282,22 @@ int ciMethod::vtable_index() {
   return get_Method()->vtable_index();
 }
 
+#ifdef SHARK
+// ------------------------------------------------------------------
+// ciMethod::itable_index
+//
+// Get the position of this method's entry in the itable, if any.
+int ciMethod::itable_index() {
+   check_is_loaded();
+   assert(holder()->is_linked(), "must be linked");
+   VM_ENTRY_MARK;
+   Method* m = get_Method();
+   if (!m->has_itable_index())
+     return Method::nonvirtual_vtable_index;
+   return m->itable_index();
+ }
+ #endif // SHARK
+
 // ------------------------------------------------------------------
 // ciMethod::uses_balanced_monitors
 //
@@ -316,34 +336,34 @@ bool ciMethod::has_balanced_monitors() {
 // ------------------------------------------------------------------
 // ciMethod::get_flow_analysis
 ciTypeFlow* ciMethod::get_flow_analysis() {
-#if defined(COMPILER2)
+#if defined(COMPILER2) || defined(SHARK)
   if (_flow == NULL) {
     ciEnv* env = CURRENT_ENV;
     _flow = new (env->arena()) ciTypeFlow(env, this);
     _flow->do_flow();
   }
   return _flow;
-#else // COMPILER2
+#else // COMPILER2 || SHARK
   ShouldNotReachHere();
   return NULL;
-#endif // COMPILER2
+#endif // COMPILER2 || SHARK
 }
 
 
 // ------------------------------------------------------------------
 // ciMethod::get_osr_flow_analysis
 ciTypeFlow* ciMethod::get_osr_flow_analysis(int osr_bci) {
-#if defined(COMPILER2)
+#if defined(COMPILER2) || SHARK 
   // OSR entry points are always place after a call bytecode of some sort
   assert(osr_bci >= 0, "must supply valid OSR entry point");
   ciEnv* env = CURRENT_ENV;
   ciTypeFlow* flow = new (env->arena()) ciTypeFlow(env, this, osr_bci);
   flow->do_flow();
   return flow;
-#else // COMPILER2
+#else // COMPILER2 || SHARK 
   ShouldNotReachHere();
   return NULL;
-#endif // COMPILER2
+#endif // COMPILER2 || SHARK 
 }
 
 // ------------------------------------------------------------------

@@ -428,6 +428,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
 
   JvmtiDeferredUpdates::delete_updates_for_frame(thread, array->original().id());
 
+#ifndef SHARK
   // Compute the caller frame based on the sender sp of stub_frame and stored frame sizes info.
   CodeBlob* cb = stub_frame.cb();
   // Verify we have the right vframeArray
@@ -447,6 +448,9 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
          strcmp("Stub<UncommonTrapStub.uncommonTrapHandler>", cb->name()) == 0,
          "unexpected code blob: %s", cb->name());
 #endif
+#else
+  intptr_t* unpack_sp = stub_frame.sender(&dummy_map).unextended_sp();
+#endif !SHARK
 
   // This is a guarantee instead of an assert because if vframe doesn't match
   // we will unpack the wrong deoptimized frame and wind up in strange places
@@ -573,7 +577,9 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
 
   frame_pcs[0] = deopt_sender.raw_pc();
 
+#ifndef SHARK
   assert(CodeCache::find_blob_unsafe(frame_pcs[0]) != NULL, "bad pc");
+#endif // SHARK
 
 #if INCLUDE_JVMCI
   if (exceptionObject() != NULL) {
@@ -1810,7 +1816,7 @@ Deoptimization::get_method_data(JavaThread* thread, const methodHandle& m,
   return mdo;
 }
 
-#if COMPILER2_OR_JVMCI
+#if COMPILER2_OR_JVMCI || defined(SHARK)
 void Deoptimization::load_class_by_index(const constantPoolHandle& constant_pool, int index, TRAPS) {
   // In case of an unresolved klass entry, load the class.
   // This path is exercised from case _ldc in Parse::do_one_bytecode,
