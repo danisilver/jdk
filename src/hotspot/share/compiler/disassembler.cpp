@@ -930,7 +930,7 @@ void Disassembler::decode(nmethod* nm, outputStream* st) {
 #ifdef SHARK
   SharkEntry* entry = (SharkEntry *) nm->code_begin();
   address p = entry->code_start();
-  address end = nm->code_limit(); 
+  address end = entry->code_limit(); 
 #else
   address p = nm->code_begin();
   address end = nm->code_end(); 

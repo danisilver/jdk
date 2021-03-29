@@ -2608,7 +2608,9 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
         stats->_nmethods_size += code->total_size();
         stats->_nmethods_code_size += code->insts_size();
       } else {
-        assert(false, "CompilerStatistics object does not exist for compilation level %d", comp_level);
+        assert(false, "CompilerStatistics object does not exist for compilation level");
+//TODO: este macro da error para mostrar numero 
+//assert(false, "CompilerStatistics object does not exist for compilation level %d", comp_level);
       }
 
       // Collect statistic per compiler

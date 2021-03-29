@@ -54,7 +54,7 @@ class SharkCompiler : public AbstractCompiler {
   void initialize();
 
   // Compile a normal (bytecode) method and install it in the VM
-  void compile_method(ciEnv* env, ciMethod* target, int entry_bci);
+  // void compile_method(ciEnv* env, ciMethod* target, int entry_bci);
 
   // Print compilation timers and statistics
   void print_timers();

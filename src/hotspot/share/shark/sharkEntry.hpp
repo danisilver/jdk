@@ -23,10 +23,11 @@
  *
  */
 
-#ifndef SHARE_VM_SHARK_SHARKENTRY_HPP
-#define SHARE_VM_SHARK_SHARKENTRY_HPP
+#ifndef SHARE_SHARK_SHARKENTRY_HPP
+#define SHARE_SHARK_SHARKENTRY_HPP
 
 #include "shark/llvmHeaders.hpp"
+#include "entry_zero.hpp"
 
 class SharkContext;
 
@@ -62,4 +63,4 @@ class SharkEntry : public ZeroEntry {
   }
 };
 
-#endif // SHARE_VM_SHARK_SHARKENTRY_HPP
+#endif // SHARE_SHARK_SHARKENTRY_HPP

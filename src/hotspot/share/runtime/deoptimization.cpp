@@ -450,7 +450,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
 #endif
 #else
   intptr_t* unpack_sp = stub_frame.sender(&dummy_map).unextended_sp();
-#endif !SHARK
+#endif //!SHARK
 
   // This is a guarantee instead of an assert because if vframe doesn't match
   // we will unpack the wrong deoptimized frame and wind up in strange places

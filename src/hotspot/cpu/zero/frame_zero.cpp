@@ -24,6 +24,7 @@
  */
 
 #include "precompiled.hpp"
+#include "code/scopeDesc.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
@@ -35,6 +36,7 @@
 #include "runtime/handles.inline.hpp"
 #include "runtime/signature.hpp"
 #include "vmreg_zero.inline.hpp"
+#include "sharkFrame_zero.hpp"
 
 #ifdef ASSERT
 void RegisterMap::check_location_valid() {
@@ -338,7 +340,7 @@ void InterpreterFrame::identify_word(int   frame_index,
                    fieldbuf, buflen);
 }
 
-SharkFrame::identify_word(int   frame_index,
+void SharkFrame::identify_word(int   frame_index,
                                int   offset,
                                char* fieldbuf,
                                char* valuebuf,
@@ -348,7 +350,7 @@ SharkFrame::identify_word(int   frame_index,
   case pc_off:
     strncpy(fieldbuf, "pc", buflen);
     if (method()->is_method()) {
-      nmethod *code = method()->code();
+      nmethod *code = (nmethod *)method()->code();
       if (code && code->pc_desc_at(pc())) {
         SimpleScopeDesc ssd(code, pc());
         snprintf(valuebuf, buflen, PTR_FORMAT " (bci %d)",
