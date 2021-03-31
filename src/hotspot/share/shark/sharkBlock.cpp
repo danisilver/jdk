@@ -1089,7 +1089,7 @@ void SharkBlock::do_field_access(bool is_get, bool is_field) {
       }
 
       if (!field->type()->is_primitive_type()) {
-        builder()->CreateUpdateBarrierSet(oopDesc::bs(), addr);
+        builder()->CreateUpdateBarrierSet(BarrierSet::barrier_set(), addr);
       }
     }
   }

@@ -36,6 +36,7 @@
 #include "shark/sharkContext.hpp"
 #include "shark/sharkRuntime.hpp"
 #include "utilities/debug.hpp"
+#include "runtime/sharedRuntime.hpp"
 
 using namespace llvm;
 
@@ -234,7 +235,9 @@ Value* SharkBuilder::register_finalizer() {
 }
 
 Value* SharkBuilder::safepoint() {
-  return make_function((address) SafepointSynchronize::block, "T", "v");
+  //TODO:es la funcion correcta?
+  //return make_function((address) SafepointSynchronize::block, "T", "v");
+  return make_function((address) ThreadSafepointState::create, "T", "v");
 }
 
 Value* SharkBuilder::throw_ArithmeticException() {
@@ -291,12 +294,14 @@ Value* SharkBuilder::cos() {
   return make_function("llvm.cos.f64", "d", "d");
 }
 
+double (*tan_ref)(double) = &::tan;
 Value* SharkBuilder::tan() {
-  return make_function((address) ::tan, "d", "d");
+  return make_function((address) tan_ref, "d", "d");
 }
 
+double (*atan2_ref)(double, double) = &::atan2;
 Value* SharkBuilder::atan2() {
-  return make_function((address) ::atan2, "dd", "d");
+  return make_function((address) atan2_ref, "dd", "d");
 }
 
 Value* SharkBuilder::sqrt() {
@@ -319,8 +324,9 @@ Value* SharkBuilder::exp() {
   return make_function("llvm.exp.f64", "d", "d");
 }
 
+double (*fabs_ref)(double) = &::fabs;
 Value* SharkBuilder::fabs() {
-  return make_function((address) ::fabs, "d", "d");
+  return make_function((address) fabs_ref, "d", "d");
 }
 
 Value* SharkBuilder::unsafe_field_offset_to_byte_offset() {
@@ -343,7 +349,7 @@ Value* SharkBuilder::uncommon_trap() {
 }
 
 Value* SharkBuilder::deoptimized_entry_point() {
-  return make_function((address) CppInterpreter::main_loop, "iT", "v");
+  return make_function((address) ZeroInterpreter::main_loop, "iT", "v");
 }
 
 // Native-Java transition
@@ -438,18 +444,20 @@ CallInst* SharkBuilder::CreateDump(Value* value) {
 // HotSpot memory barriers
 
 void SharkBuilder::CreateUpdateBarrierSet(BarrierSet* bs, Value* field) {
-  if (bs->kind() != BarrierSet::CardTableModRef)
+  if (!bs->is_a(BarrierSet::ModRef))
     Unimplemented();
 
+  CardTableBarrierSet* ctbs = barrier_set_cast<CardTableBarrierSet>(bs);
+  CardTable* ct = ctbs->card_table();
   CreateStore(
-    LLVMValue::jbyte_constant(CardTableModRefBS::dirty_card),
+    LLVMValue::jbyte_constant(CardTable::dirty_card_val()),
     CreateIntToPtr(
       CreateAdd(
         LLVMValue::intptr_constant(
-          (intptr_t) ((CardTableModRefBS *) bs)->byte_map_base),
+          (intptr_t) ct->byte_map_base()),
         CreateLShr(
           CreatePtrToInt(field, SharkType::intptr_type()),
-          LLVMValue::intptr_constant(CardTableModRefBS::card_shift))),
+          LLVMValue::intptr_constant(CardTable::card_shift))),
       PointerType::getUnqual(SharkType::jbyte_type())));
 }
 

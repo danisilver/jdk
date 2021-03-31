@@ -84,9 +84,9 @@ class SharkInlineBlock : public SharkBlock {
 class SharkInlinerHelper : public StackObj {
  public:
   SharkInlinerHelper(ciMethod* target, SharkState* entry_state)
-    : _target(target),
-      _entry_state(entry_state),
-      _iter(target) {}
+    : _iter(target), 
+     _entry_state(entry_state),
+     _target(target) {}
 
  private:
   ciBytecodeStream _iter;

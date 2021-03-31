@@ -219,10 +219,10 @@ void SharkNativeWrapper::initialize(const char *name) {
 
   // Make sure new state is visible in the GC thread
   if (os::is_MP()) {
-    if (UseMembar)
+//  if (UseMembar) //UseMembar se usa siempre desde que se dejo de usar mprotect
       builder()->CreateFence(llvm::SequentiallyConsistent, llvm::CrossThread);
-    else
-      CreateWriteMemorySerializePage();
+//  else
+//    CreateWriteMemorySerializePage();
   }
 
   // Handle safepoint operations, pending suspend requests,

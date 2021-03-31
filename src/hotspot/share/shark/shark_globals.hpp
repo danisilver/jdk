@@ -34,7 +34,7 @@
 #endif
 
 /*#define SHARK_FLAGS(develop, develop_pd, product, product_pd, diagnostic, notproduct) */
-#define SHARK_FLAGS(develop,                                                   \
+#define SHARK_FLAGS(develop,                                                  \
                    develop_pd,                                                \
                    product,                                                   \
                    product_pd,                                                \

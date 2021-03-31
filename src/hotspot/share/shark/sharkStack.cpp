@@ -29,6 +29,7 @@
 #include "shark/sharkNativeWrapper.hpp"
 #include "shark/sharkStack.hpp"
 #include "shark/sharkType.hpp"
+#include "../zero/sharkFrame_zero.hpp"
 
 using namespace llvm;
 
@@ -239,10 +240,10 @@ BasicBlock* SharkStackWithNativeFrame::CreateBlock(const char* name) const {
 }
 
 address SharkStackWithNormalFrame::interpreter_entry_point() const {
-  return (address) CppInterpreter::normal_entry;
+  return (address) ZeroInterpreter::normal_entry;
 }
 address SharkStackWithNativeFrame::interpreter_entry_point() const {
-  return (address) CppInterpreter::native_entry;
+  return (address) ZeroInterpreter::native_entry;
 }
 
 #ifndef PRODUCT

@@ -120,7 +120,8 @@ SharkConstant::SharkConstant(ciConstant constant, ciType *type) {
     }
   }
 
-  if (object->is_null_object() || ! object->can_be_constant() || ! object->is_loaded()) {
+  // TODO: can_be_constant siempre devuelve true de alguna manera por invokedynamic
+  if (object->is_null_object() /*|| ! object->can_be_constant() */ || ! object->is_loaded()) {
     _is_loaded = false;
     return;
   }

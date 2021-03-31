@@ -25,7 +25,7 @@
 #ifndef SHARE_CI_CITYPEFLOW_HPP
 #define SHARE_CI_CITYPEFLOW_HPP
 
-#ifdef COMPILER2
+#if defined(COMPILER2) || defined(SHARK)
 #include "ci/ciEnv.hpp"
 #include "ci/ciKlass.hpp"
 #include "ci/ciMethodBlocks.hpp"

@@ -30,6 +30,7 @@
 #include "runtime/thread.hpp"
 #include "shark/llvmHeaders.hpp"
 #include "shark/llvmValue.hpp"
+#include "../zero/sharkFrame_zero.hpp"
 
 class SharkRuntime : public AllStatic {
   // VM calls

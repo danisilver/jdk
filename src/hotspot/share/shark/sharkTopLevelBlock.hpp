@@ -44,8 +44,8 @@ class SharkTopLevelBlock : public SharkBlock {
     : SharkBlock(function),
       _function(function),
       _ciblock(ciblock),
-      _entered(false),
       _has_trap(false),
+      _entered(false),
       _needs_phis(false),
       _entry_state(NULL),
       _entry_block(NULL) {}

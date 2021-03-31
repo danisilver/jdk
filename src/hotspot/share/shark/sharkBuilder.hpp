@@ -27,8 +27,8 @@
 #define SHARE_VM_SHARK_SHARKBUILDER_HPP
 
 #include "ci/ciType.hpp"
-#include "memory/barrierSet.hpp"
-#include "memory/cardTableModRefBS.hpp"
+#include "gc/shared/barrierSet.hpp"
+#include "gc/shared/cardTableBarrierSet.hpp"
 #include "shark/llvmHeaders.hpp"
 #include "shark/llvmValue.hpp"
 #include "shark/sharkCodeBuffer.hpp"

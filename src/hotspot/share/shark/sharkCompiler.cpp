@@ -43,6 +43,8 @@
 #include "shark/sharkNativeWrapper.hpp"
 #include "shark/shark_globals.hpp"
 #include "utilities/debug.hpp"
+#include "runtime/interfaceSupport.inline.hpp"
+#include "prims/jvmtiExport.hpp"
 
 #include <fnmatch.h>
 
@@ -58,7 +60,7 @@ namespace {
 }
 
 SharkCompiler::SharkCompiler()
-  : AbstractCompiler(shark) {
+  : AbstractCompiler(compiler_shark) {
   // Create the lock to protect the memory manager and execution engine
   _execution_engine_lock = new Monitor(Mutex::leaf, "SharkExecutionEngineLock");
   MutexLocker locker(execution_engine_lock());
@@ -167,7 +169,7 @@ void SharkCompiler::compile_method(ciEnv*    env,
   }
 
   // Create the recorders
-  Arena arena;
+  Arena arena(mtCompiler); //TODO: seguro?
   env->set_oop_recorder(new OopRecorder(&arena));
   OopMapSet oopmaps;
   env->set_debug_info(new DebugInformationRecorder(env->oop_recorder()));
@@ -218,7 +220,6 @@ void SharkCompiler::compile_method(ciEnv*    env,
                        &handler_table,
                        &inc_table,
                        this,
-                       env->comp_level(),
                        false,
                        false);
 }
@@ -316,7 +317,7 @@ void SharkCompiler::generate_native_code(SharkEntry* entry,
   // Print debug information, if requested
   if (SharkTraceInstalls) {
     tty->print_cr(
-      " [%p-%p): %s (%d bytes code)",
+      " [%p-%p): %s (%ld bytes code)",
       code_start, code_limit, name, code_limit - code_start);
   }
 }

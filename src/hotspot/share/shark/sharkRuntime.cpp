@@ -32,6 +32,12 @@
 #ifdef TARGET_ARCH_zero
 # include "stack_zero.inline.hpp"
 #endif
+#include "runtime/interfaceSupport.inline.hpp" //JRT_ENTRY
+#include "classfile/vmSymbols.hpp" //vmSymbol::java_lang_*
+#include "memory/oopFactory.hpp" //oopFactory::new_type_array
+#include "../zero/fakeStubFrame_zero.hpp" //FakeStubFrame
+#include "../zero/interpreterFrame_zero.hpp" //InterpreterFrame
+#include "oops/oop.inline.hpp" //InterpreterFrame
 
 using namespace llvm;
 
@@ -39,16 +45,15 @@ JRT_ENTRY(int, SharkRuntime::find_exception_handler(JavaThread* thread,
                                                     int*        indexes,
                                                     int         num_indexes))
   constantPoolHandle pool(thread, method(thread)->constants());
-  KlassHandle exc_klass(thread, ((oop) tos_at(thread, 0))->klass());
+  Klass* exc_klass = const_cast<Klass *>(((oop) tos_at(thread, 0))->klass());
 
   for (int i = 0; i < num_indexes; i++) {
-    Klass* tmp = pool->klass_at(indexes[i], CHECK_0);
-    KlassHandle chk_klass(thread, tmp);
+    Klass* chk_klass = pool->klass_at(indexes[i], CHECK_0);
 
-    if (exc_klass() == chk_klass())
+    if (exc_klass == chk_klass)
       return i;
 
-    if (exc_klass()->is_subtype_of(chk_klass()))
+    if (exc_klass->is_subtype_of(chk_klass))
       return i;
   }
 
@@ -62,12 +67,15 @@ JRT_ENTRY(void, SharkRuntime::monitorenter(JavaThread*      thread,
 
   Handle object(thread, lock->obj());
   assert(Universe::heap()->is_in_reserved_or_null(object()), "should be");
+/* ObjectSynchronizer ya trae esta comprobacion
   if (UseBiasedLocking) {
     // Retry fast entry if bias is revoked to avoid unnecessary inflation
     ObjectSynchronizer::fast_enter(object, lock->lock(), true, CHECK);
   } else {
     ObjectSynchronizer::slow_enter(object, lock->lock(), CHECK);
   }
+*/
+  ObjectSynchronizer::enter(object, lock->lock(), CHECK);
   assert(Universe::heap()->is_in_reserved_or_null(lock->obj()), "should be");
 JRT_END
 
@@ -78,12 +86,13 @@ JRT_ENTRY(void, SharkRuntime::monitorexit(JavaThread*      thread,
   if (lock == NULL || object()->is_unlocked()) {
     THROW(vmSymbols::java_lang_IllegalMonitorStateException());
   }
-  ObjectSynchronizer::slow_exit(object(), lock->lock(), thread);
+  ObjectSynchronizer::exit(object(), lock->lock(), thread);
 JRT_END
 
 JRT_ENTRY(void, SharkRuntime::new_instance(JavaThread* thread, int index))
   Klass* k_oop = method(thread)->constants()->klass_at(index, CHECK);
-  instanceKlassHandle klass(THREAD, k_oop);
+  // instanceKlassHandle klass(THREAD, k_oop);
+  InstanceKlass* klass = InstanceKlass::cast(k_oop);
 
   // Make sure we are not instantiating an abstract klass
   klass->check_valid_for_instantiation(true, CHECK);
@@ -186,12 +195,12 @@ JRT_END
 void SharkRuntime::dump(const char *name, intptr_t value) {
   oop valueOop = (oop) value;
   tty->print("%s = ", name);
-  if (valueOop->is_oop(true))
+  if (oopDesc::is_oop(valueOop,true))
     valueOop->print_on(tty);
   else if (value >= ' ' && value <= '~')
-    tty->print("'%c' (%d)", value, value);
+    tty->print("'%ld' (%ld)", value, value);
   else
-    tty->print("%p", value);
+    tty->print("%ld", value);
   tty->print_cr("");
 }
 
@@ -211,8 +220,8 @@ int SharkRuntime::uncommon_trap(JavaThread* thread, int trap_request) {
 
   // Initiate the trap
   thread->set_last_Java_frame();
-  Deoptimization::UnrollBlock *urb =
-    Deoptimization::uncommon_trap(thread, trap_request);
+  // TODO: es correcto? Deoptimization::Unpack_uncommon_trap
+  Deoptimization::UnrollBlock *urb = Deoptimization::uncommon_trap(thread, trap_request, 0);
   thread->reset_last_Java_frame();
 
   // Pop our dummy frame and the frame being deoptimized

@@ -30,6 +30,7 @@
 #include "ci/ciStreams.hpp"
 #include "ci/ciType.hpp"
 #include "ci/ciTypeFlow.hpp"
+#include "ci/ciSymbols.hpp"
 #include "interpreter/bytecodes.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/deoptimization.hpp"
@@ -162,7 +163,7 @@ void SharkTopLevelBlock::scan_for_traps() {
 
       // Bail out if the class cannot be instantiated
       if (klass->is_abstract() || klass->is_interface() ||
-          klass->name() == ciSymbol::java_lang_Class()) {
+          klass->name() == ciSymbols::java_lang_Class()) {
         set_trap(
           Deoptimization::make_trap_request(
             Deoptimization::Reason_unhandled,
@@ -202,13 +203,13 @@ bool SharkTopLevelBlock::static_field_ok_in_clinit(ciField* field) {
   bool access_OK = false;
   if (target()->holder()->is_subclass_of(field->holder())) {
     if (target()->is_static()) {
-      if (target()->name() == ciSymbol::class_initializer_name()) {
+      if (target()->name() == ciSymbols::class_initializer_name()) {
         // It's OK to access static fields from the class initializer
         access_OK = true;
       }
     }
     else {
-      if (target()->name() == ciSymbol::object_initializer_name()) {
+      if (target()->name() == ciSymbols::object_initializer_name()) {
         // It's also OK to access static fields inside a constructor,
         // because any thread calling the constructor must first have
         // synchronized on the class by executing a "new" bytecode.
@@ -944,7 +945,7 @@ void SharkTopLevelBlock::do_astore(BasicType basic_type) {
   builder()->CreateStore(value, addr);
 
   if (basic_type == T_OBJECT) // XXX or T_ARRAY?
-    builder()->CreateUpdateBarrierSet(oopDesc::bs(), addr);
+    builder()->CreateUpdateBarrierSet(BarrierSet::barrier_set(), addr);
 }
 
 void SharkTopLevelBlock::do_return(BasicType type) {
@@ -1144,7 +1145,7 @@ Value *SharkTopLevelBlock::get_virtual_callee(SharkValue* receiver,
       klass,
       SharkType::Method_type(),
       vtableEntry::size() * wordSize,
-      in_ByteSize(InstanceKlass::vtable_start_offset() * wordSize),
+      in_ByteSize(in_bytes(InstanceKlass::vtable_start_offset()) * wordSize),
       LLVMValue::intptr_constant(vtable_index)),
     "callee");
 }
@@ -1166,12 +1167,12 @@ Value* SharkTopLevelBlock::get_interface_callee(SharkValue *receiver,
   Value *vtable_start = builder()->CreateAdd(
     builder()->CreatePtrToInt(object_klass, SharkType::intptr_type()),
     LLVMValue::intptr_constant(
-      InstanceKlass::vtable_start_offset() * HeapWordSize),
+      in_bytes(InstanceKlass::vtable_start_offset()) * HeapWordSize),
     "vtable_start");
 
   Value *vtable_length = builder()->CreateValueOfStructEntry(
     object_klass,
-    in_ByteSize(InstanceKlass::vtable_length_offset() * HeapWordSize),
+    in_ByteSize(in_bytes(InstanceKlass::vtable_length_offset()) * HeapWordSize),
     SharkType::jint_type(),
     "vtable_length");
   vtable_length =
@@ -1769,11 +1770,11 @@ void SharkTopLevelBlock::do_new() {
 
     // Set the mark
     intptr_t mark;
-    if (UseBiasedLocking) {
+    if (UseBiasedLocking) { // TODO: esto va a fallar, markOopDesc renombrado a markWord
       Unimplemented();
     }
     else {
-      mark = (intptr_t) markOopDesc::prototype();
+      mark = (intptr_t) markWord::prototype().value();
     }
     builder()->CreateStore(LLVMValue::intptr_constant(mark), mark_addr);
 
@@ -1928,7 +1929,7 @@ void SharkTopLevelBlock::acquire_lock(Value *lockee, int exception_action) {
 
   Value *mark = builder()->CreateLoad(mark_addr, "mark");
   Value *disp = builder()->CreateOr(
-    mark, LLVMValue::intptr_constant(markOopDesc::unlocked_value), "disp");
+    mark, LLVMValue::intptr_constant(markWord::unlocked_value), "disp");
   builder()->CreateStore(disp, monitor_header_addr);
 
   Value *lock = builder()->CreatePtrToInt(
@@ -1942,7 +1943,7 @@ void SharkTopLevelBlock::acquire_lock(Value *lockee, int exception_action) {
   builder()->SetInsertPoint(try_recursive);
   Value *addr = builder()->CreateAnd(
     disp,
-    LLVMValue::intptr_constant(~markOopDesc::lock_mask_in_place));
+    LLVMValue::intptr_constant(~markWord::lock_mask_in_place));
 
   // NB we use the entire stack, but JavaThread::is_lock_owned()
   // uses a more limited range.  I don't think it hurts though...

@@ -149,9 +149,11 @@ void SharkDecacher::process_local_slot(int          index,
 }
 
 void SharkDecacher::end_frame() {
+  methodHandle null_mh;
   // Record the scope
   debug_info()->describe_scope(
     pc_offset(),
+    null_mh,
     target(),
     bci(),
     true,

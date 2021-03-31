@@ -30,6 +30,7 @@
 #include "shark/sharkContext.hpp"
 #include "utilities/globalDefinitions.hpp"
 #include "memory/allocation.hpp"
+#include "runtime/jniHandles.hpp" //JNIHandleBlock
 
 using namespace llvm;
 

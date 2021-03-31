@@ -65,9 +65,11 @@ bool SharkIntrinsics::is_intrinsic(ciMethod *target) {
   case vmIntrinsics::_currentThread:
     return true;
 
+/* eliminado sun_misc_unsafe de la jvm
     // sun.misc.Unsafe
   case vmIntrinsics::_compareAndSwapInt:
     return true;
+*/
 
   default:
     if (SharkPerformanceWarnings) {
@@ -139,10 +141,12 @@ void SharkIntrinsics::do_intrinsic() {
     do_Thread_currentThread();
     break;
 
+/* 
     // sun.misc.Unsafe
   case vmIntrinsics::_compareAndSwapInt:
     do_Unsafe_compareAndSwapInt();
     break;
+*/
 
   default:
     ShouldNotReachHere();

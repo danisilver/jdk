@@ -34,6 +34,7 @@
 #include "code/scopeDesc.hpp"
 #include "compiler/abstractCompiler.hpp"
 #include "compiler/compileBroker.hpp"
+#include "compiler/compileBroker.hpp"
 #include "compiler/compileLog.hpp"
 #include "compiler/compilerDirectives.hpp"
 #include "compiler/directivesParser.hpp"
@@ -1528,7 +1529,8 @@ void nmethod::flush() {
   CodeCache::unregister_old_nmethod(this);
 
 #ifdef SHARK
-  ((SharkCompiler *) compiler)->free_compiled_method(insts_begin());
+  SharkCompiler *compiler = (SharkCompiler *) CompileBroker::compiler(_comp_level);
+  compiler->free_compiled_method(insts_begin());
 #endif // SHARK
 
   CodeBlob::flush();

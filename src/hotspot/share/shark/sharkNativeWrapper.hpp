@@ -26,7 +26,7 @@
 #ifndef SHARE_VM_SHARK_SHARKNATIVEWRAPPER_HPP
 #define SHARE_VM_SHARK_SHARKNATIVEWRAPPER_HPP
 
-#include "runtime/handles.hpp"
+#include "runtime/jniHandles.hpp"
 #include "shark/llvmHeaders.hpp"
 #include "shark/sharkBuilder.hpp"
 #include "shark/sharkContext.hpp"
@@ -157,6 +157,7 @@ class SharkNativeWrapper : public SharkCompileInvariants {
     builder()->CreateStore(
       LLVMValue::jint_constant(state), thread_state_address());
   }
+/* https://bugs.openjdk.java.net/browse/JDK-8187812
   void CreateWriteMemorySerializePage() const {
     builder()->CreateStore(
       LLVMValue::jint_constant(1),
@@ -171,6 +172,7 @@ class SharkNativeWrapper : public SharkCompileInvariants {
             LLVMValue::intptr_constant(os::get_serialize_page_mask()))),
         llvm::PointerType::getUnqual(SharkType::jint_type())));
   }
+*/
   void CreateResetHandleBlock() const {
     llvm::Value *active_handles = builder()->CreateValueOfStructEntry(
       thread(),
