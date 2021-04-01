@@ -353,7 +353,7 @@ ciTypeFlow* ciMethod::get_flow_analysis() {
 // ------------------------------------------------------------------
 // ciMethod::get_osr_flow_analysis
 ciTypeFlow* ciMethod::get_osr_flow_analysis(int osr_bci) {
-#if defined(COMPILER2) || SHARK 
+#if defined(COMPILER2) || defined(SHARK)
   // OSR entry points are always place after a call bytecode of some sort
   assert(osr_bci >= 0, "must supply valid OSR entry point");
   ciEnv* env = CURRENT_ENV;

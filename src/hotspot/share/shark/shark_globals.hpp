@@ -33,7 +33,6 @@
 # include "shark_globals_zero.hpp"
 #endif
 
-/*#define SHARK_FLAGS(develop, develop_pd, product, product_pd, diagnostic, notproduct) */
 #define SHARK_FLAGS(develop,                                                  \
                    develop_pd,                                                \
                    product,                                                   \
@@ -59,19 +58,19 @@
   develop(ccstr, SharkPrintTypeflowOf, NULL,                                  \
           "Print the typeflow of the specified method")                       \
                                                                               \
-  product(ccstr, SharkPrintBitcodeOf, NULL, DIAGNOSTIC                        \
+  product(ccstr, SharkPrintBitcodeOf, NULL, DIAGNOSTIC,                       \
           "Print the LLVM bitcode of the specified method")                   \
                                                                               \
-  product(ccstr, SharkPrintAsmOf, NULL, DIAGNOSTIC                            \
+  product(ccstr, SharkPrintAsmOf, NULL, DIAGNOSTIC,                           \
           "Print the asm of the specified method")                            \
                                                                               \
   develop(bool, SharkTraceBytecodes, false,                                   \
           "Trace bytecode compilation")                                       \
                                                                               \
-  product(bool, SharkTraceInstalls, false, DIAGNOSTIC                         \
+  product(bool, SharkTraceInstalls, false, DIAGNOSTIC,                        \
           "Trace method installation")                                        \
                                                                               \
-  product(bool, SharkPerformanceWarnings, false, DIAGNOSTIC                   \
+  product(bool, SharkPerformanceWarnings, false, DIAGNOSTIC,                  \
           "Warn about things that could be made faster")                      \
                                                                               \
   develop(ccstr, SharkVerifyFunction, NULL,                                   \

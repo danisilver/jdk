@@ -319,6 +319,15 @@
 #define NOT_COMPILER2(code) code
 #endif // COMPILER2
 
+// COMPILER2 variant
+#ifdef SHARK
+#define SHARK_PRESENT(code) code
+#define NOT_SHARK(code)
+#else // COMPILER2
+#define SHARK_PRESENT(code)
+#define NOT_SHARK(code) code
+#endif // COMPILER2
+
 // COMPILER2 or JVMCI
 #if defined(COMPILER2) || INCLUDE_JVMCI
 #define COMPILER2_OR_JVMCI 1
@@ -344,7 +353,7 @@
 #endif
 
 // COMPILER1 or COMPILER2
-#if defined(COMPILER1) || defined(COMPILER2)
+#if defined(COMPILER1) || defined(COMPILER2) 
 #define COMPILER1_OR_COMPILER2 1
 #define COMPILER1_OR_COMPILER2_PRESENT(code) code
 #else

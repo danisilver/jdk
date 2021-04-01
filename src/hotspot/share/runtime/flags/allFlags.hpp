@@ -85,6 +85,15 @@
     range,                    \
     constraint))              \
                               \
+  SHARK_PRESENT(SHARK_FLAGS(  \
+    develop,                  \
+    develop_pd,               \
+    product,                  \
+    product_pd,               \
+    notproduct,               \
+    range,                    \
+    constraint))              \
+                              \
   COMPILER_FLAGS(             \
     develop,                  \
     develop_pd,               \
