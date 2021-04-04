@@ -29,7 +29,13 @@
 #include "shark/sharkNativeWrapper.hpp"
 #include "shark/sharkStack.hpp"
 #include "shark/sharkType.hpp"
+#include "runtime/stubRoutines.hpp"
+#include "../cpu/zero/interpreterFrame_zero.hpp"
+#include "interpreter/zero/bytecodeInterpreter.hpp"
+#include "interpreter/zero/bytecodeInterpreter.hpp"
+#include "../cpu/zero/entryFrame_zero.hpp"
 #include "../zero/sharkFrame_zero.hpp"
+#include "../cpu/zero/frame_zero.inline.hpp"
 
 using namespace llvm;
 

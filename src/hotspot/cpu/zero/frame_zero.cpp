@@ -37,6 +37,7 @@
 #include "runtime/signature.hpp"
 #include "vmreg_zero.inline.hpp"
 #include "sharkFrame_zero.hpp"
+#include "oops/method.inline.hpp"
 
 #ifdef ASSERT
 void RegisterMap::check_location_valid() {

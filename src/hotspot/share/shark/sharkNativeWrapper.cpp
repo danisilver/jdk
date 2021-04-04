@@ -27,6 +27,7 @@
 #include "shark/llvmHeaders.hpp"
 #include "shark/sharkNativeWrapper.hpp"
 #include "shark/sharkType.hpp"
+#include "oops/klass.inline.hpp"
 
 using namespace llvm;
 

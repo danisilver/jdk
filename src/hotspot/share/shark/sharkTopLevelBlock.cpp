@@ -45,6 +45,8 @@
 #include "shark/sharkValue.hpp"
 #include "shark/shark_globals.hpp"
 #include "utilities/debug.hpp"
+#include "oops/klass.inline.hpp"
+
 
 using namespace llvm;
 

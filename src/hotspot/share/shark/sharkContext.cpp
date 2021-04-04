@@ -31,6 +31,11 @@
 #include "utilities/globalDefinitions.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/jniHandles.hpp" //JNIHandleBlock
+#include "runtime/stubRoutines.hpp"
+#include "../cpu/zero/interpreterFrame_zero.hpp" 
+#include "interpreter/zero/bytecodeInterpreter.hpp" 
+#include "../cpu/zero/entryFrame_zero.hpp" 
+#include "../cpu/zero/frame_zero.inline.hpp" 
 
 using namespace llvm;
 
