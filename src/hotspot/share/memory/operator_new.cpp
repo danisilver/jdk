@@ -30,7 +30,7 @@
 //--------------------------------------------------------------------------------------
 // Non-product code
 
-#ifndef PRODUCT
+#if !defined(PRODUCT) || !defined(SHARK)
 // The global operator new should never be called since it will usually indicate
 // a memory leak.  Use CHeapObj as the base class of such objects to make it explicit
 // that they're allocated on the C heap.

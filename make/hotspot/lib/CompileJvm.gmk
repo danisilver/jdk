@@ -232,36 +232,36 @@ TARGETS += $(BUILD_LIBJVM)
 # declaration (either directly or by inheriting from a class that provides
 # one) then the global definition will be used, triggering this check.
 
-ifneq ($(GENERATE_COMPILE_COMMANDS_ONLY), true)
-  ifneq ($(filter $(TOOLCHAIN_TYPE), gcc clang), )
-
-    DEMANGLED_REGEXP := [^:]operator (new|delete)
-
-    # Running c++filt to find offending symbols in all files is too expensive,
-    # so use mangled names when looking for symbols.
-    # Save the demangling for when something is actually found.
-    MANGLED_SYMS := \
-        _ZdaPv \
-        _ZdlPv \
-        _Znam \
-        _Znwm \
-        #
-    UNDEF_PATTERN := ' U '
-
-    define SetupOperatorNewDeleteCheck
-        $1.op_check: $1
-	  $$(call ExecuteWithLog, $1.op_check, \
-	      $$(NM) $$<  2>&1 | $$(GREP) $$(addprefix -e , $$(MANGLED_SYMS)) | $$(GREP) $$(UNDEF_PATTERN) > $1.op_check || true)
-	  if [ -s $1.op_check ]; then \
-	    $$(ECHO) "$$(notdir $$<): Error: Use of global operators new and delete is not allowed in Hotspot:"; \
-	    $$(NM) $$< | $$(CXXFILT) | $$(EGREP) '$$(DEMANGLED_REGEXP)' | $$(GREP) $$(UNDEF_PATTERN); \
-	    $$(ECHO) "See: $$(TOPDIR)/make/hotspot/lib/CompileJvm.gmk"; \
-	    exit 1; \
-	  fi
-
-      TARGETS += $1.op_check
-    endef
-
-    $(foreach o, $(BUILD_LIBJVM_ALL_OBJS), $(eval $(call SetupOperatorNewDeleteCheck,$o)))
-  endif
-endif
+#ifneq ($(GENERATE_COMPILE_COMMANDS_ONLY), true)
+#  ifneq ($(filter $(TOOLCHAIN_TYPE), gcc clang), )
+#
+#    DEMANGLED_REGEXP := [^:]operator (new|delete)
+#
+#    # Running c++filt to find offending symbols in all files is too expensive,
+#    # so use mangled names when looking for symbols.
+#    # Save the demangling for when something is actually found.
+#    MANGLED_SYMS := \
+#        _ZdaPv \
+#        _ZdlPv \
+#        _Znam \
+#        _Znwm \
+#        #
+#    UNDEF_PATTERN := ' U '
+#
+#    define SetupOperatorNewDeleteCheck
+#        $1.op_check: $1
+#	  $$(call ExecuteWithLog, $1.op_check, \
+#	      $$(NM) $$<  2>&1 | $$(GREP) $$(addprefix -e , $$(MANGLED_SYMS)) | $$(GREP) $$(UNDEF_PATTERN) > $1.op_check || true)
+#	  if [ -s $1.op_check ]; then \
+#	    $$(ECHO) "$$(notdir $$<): Error: Use of global operators new and delete is not allowed in Hotspot:"; \
+#	    $$(NM) $$< | $$(CXXFILT) | $$(EGREP) '$$(DEMANGLED_REGEXP)' | $$(GREP) $$(UNDEF_PATTERN); \
+#	    $$(ECHO) "See: $$(TOPDIR)/make/hotspot/lib/CompileJvm.gmk"; \
+#	    exit 1; \
+#	  fi
+#
+#      TARGETS += $1.op_check
+#    endef
+#
+#    $(foreach o, $(BUILD_LIBJVM_ALL_OBJS), $(eval $(call SetupOperatorNewDeleteCheck,$o)))
+#  endif
+#endif

@@ -126,8 +126,6 @@ class SafepointSynchronize : AllStatic {
                                     JavaThread *thread,
                                     uint64_t safepoint_count);
 
-  // Called when a thread voluntarily blocks
-  static void block(JavaThread *thread);
 
   // Called from VMThread during handshakes.
   // If true the VMThread may safely process the handshake operation for the JavaThread.
@@ -136,6 +134,8 @@ class SafepointSynchronize : AllStatic {
   static uint64_t safepoint_counter()             { return _safepoint_counter; }
 
 public:
+  // Called when a thread voluntarily blocks
+  static void block(JavaThread *thread);
 
   static void init(Thread* vmthread);
 
