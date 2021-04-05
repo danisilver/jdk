@@ -53,7 +53,7 @@ JVMFlag::Error AliasLevelConstraintFunc(intx value, bool verbose) {
  */
 JVMFlag::Error CICompilerCountConstraintFunc(intx value, bool verbose) {
   int min_number_of_compiler_threads = 0;
-#if COMPILER1_OR_COMPILER2
+#if defined(COMPILER1_OR_COMPILER2) || defined(SHARK)
   if (CompilerConfig::is_tiered()) {
     min_number_of_compiler_threads = 2;
   } else if (!CompilerConfig::is_interpreter_only()) {
