@@ -31,7 +31,7 @@
 #include "compiler/abstractCompiler.hpp"
 #include "compiler/compileBroker.hpp"
 #include "shark/llvmHeaders.hpp"
-#include "shark/sharkMemoryManager.hpp"
+#include "sharkEntry.hpp"
 
 class SharkContext;
 
@@ -98,20 +98,15 @@ class SharkCompiler : public AbstractCompiler {
   // safe, and is protected by the same lock as the execution engine.
  private:
   Monitor*               _execution_engine_lock;
-  SharkMemoryManager*    _memory_manager;
-  llvm::ExecutionEngine* _execution_engine;
+  std::unique_ptr<llvm::orc::LLJIT> _execution_engine;
 
  private:
   Monitor* execution_engine_lock() const {
     return _execution_engine_lock;
   }
-  SharkMemoryManager* memory_manager() const {
+  llvm::orc::LLJIT* execution_engine() const {
     assert(execution_engine_lock()->owned_by_self(), "should be");
-    return _memory_manager;
-  }
-  llvm::ExecutionEngine* execution_engine() const {
-    assert(execution_engine_lock()->owned_by_self(), "should be");
-    return _execution_engine;
+    return _execution_engine.get();
   }
 
   // Global access

@@ -37,7 +37,7 @@ class SharkFreeQueueItem;
 
 class SharkContext : public llvm::LLVMContext {
  public:
-  SharkContext(const char* name);
+  SharkContext(const char *name);
 
  private:
   llvm::Module* _module;
@@ -58,9 +58,9 @@ class SharkContext : public llvm::LLVMContext {
   void add_function(llvm::Function* function) const {
     module()->getFunctionList().push_back(function);
   }
-  llvm::Constant* get_external(const char*               name,
+  llvm::Value* get_external(const char*               name,
                                llvm::FunctionType* sig) {
-    return module()->getOrInsertFunction(name, sig);
+    return module()->getOrInsertFunction(name, sig).getCallee();
   }
 
   // Basic types

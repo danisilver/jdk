@@ -101,7 +101,9 @@ void SharkFunction::initialize(const char *name) {
     entry_state = new SharkOSREntryState(start_block, method, osr_buf);
 
     // Free the OSR buffer
-    builder()->CreateCall(builder()->osr_migration_end(), osr_buf);
+    builder()->CreateCall(
+      llvm::FunctionType::get(builder()->osr_migration_end()->getType(), false), 
+      builder()->osr_migration_end(), llvm::makeArrayRef<llvm::Value *>(osr_buf));
   }
   else {
     entry_state = new SharkNormalEntryState(start_block, method);

@@ -37,67 +37,66 @@
 #include "../cpu/zero/entryFrame_zero.hpp" 
 #include "../cpu/zero/frame_zero.inline.hpp" 
 
-using namespace llvm;
 
 SharkContext::SharkContext(const char* name)
-  : LLVMContext(),
+  : llvm::LLVMContext(),
     _free_queue(NULL) {
   // Create a module to build our functions into
-  _module = new Module(name, *this);
+  _module = new llvm::Module(name, *this);
 
   // Create basic types
-  _void_type    = Type::getVoidTy(*this);
-  _bit_type     = Type::getInt1Ty(*this);
-  _jbyte_type   = Type::getInt8Ty(*this);
-  _jshort_type  = Type::getInt16Ty(*this);
-  _jint_type    = Type::getInt32Ty(*this);
-  _jlong_type   = Type::getInt64Ty(*this);
-  _jfloat_type  = Type::getFloatTy(*this);
-  _jdouble_type = Type::getDoubleTy(*this);
+  _void_type    = llvm::Type::getVoidTy(*this);
+  _bit_type     = llvm::Type::getInt1Ty(*this);
+  _jbyte_type   = llvm::Type::getInt8Ty(*this);
+  _jshort_type  = llvm::Type::getInt16Ty(*this);
+  _jint_type    = llvm::Type::getInt32Ty(*this);
+  _jlong_type   = llvm::Type::getInt64Ty(*this);
+  _jfloat_type  = llvm::Type::getFloatTy(*this);
+  _jdouble_type = llvm::Type::getDoubleTy(*this);
 
   // Create compound types
-  _itableOffsetEntry_type = PointerType::getUnqual(
-    ArrayType::get(jbyte_type(), itableOffsetEntry::size() * wordSize));
+  _itableOffsetEntry_type = llvm::PointerType::getUnqual(
+    llvm::ArrayType::get(jbyte_type(), itableOffsetEntry::size() * wordSize));
 
-  _Metadata_type = PointerType::getUnqual(
-    ArrayType::get(jbyte_type(), sizeof(Metadata)));
+  _Metadata_type = llvm::PointerType::getUnqual(
+    llvm::ArrayType::get(jbyte_type(), sizeof(Metadata)));
 
-  _klass_type = PointerType::getUnqual(
-    ArrayType::get(jbyte_type(), sizeof(Klass)));
+  _klass_type = llvm::PointerType::getUnqual(
+    llvm::ArrayType::get(jbyte_type(), sizeof(Klass)));
 
-  _jniEnv_type = PointerType::getUnqual(
-    ArrayType::get(jbyte_type(), sizeof(JNIEnv)));
+  _jniEnv_type = llvm::PointerType::getUnqual(
+    llvm::ArrayType::get(jbyte_type(), sizeof(JNIEnv)));
 
-  _jniHandleBlock_type = PointerType::getUnqual(
-    ArrayType::get(jbyte_type(), sizeof(JNIHandleBlock)));
+  _jniHandleBlock_type = llvm::PointerType::getUnqual(
+    llvm::ArrayType::get(jbyte_type(), sizeof(JNIHandleBlock)));
 
-  _Method_type = PointerType::getUnqual(
-    ArrayType::get(jbyte_type(), sizeof(Method)));
+  _Method_type = llvm::PointerType::getUnqual(
+    llvm::ArrayType::get(jbyte_type(), sizeof(Method)));
 
-  _monitor_type = ArrayType::get(
+  _monitor_type = llvm::ArrayType::get(
     jbyte_type(), frame::interpreter_frame_monitor_size() * wordSize);
 
-  _oop_type = PointerType::getUnqual(
-    ArrayType::get(jbyte_type(), sizeof(oopDesc)));
+  _oop_type = llvm::PointerType::getUnqual(
+    llvm::ArrayType::get(jbyte_type(), sizeof(oopDesc)));
 
-  _thread_type = PointerType::getUnqual(
-    ArrayType::get(jbyte_type(), sizeof(JavaThread)));
+  _thread_type = llvm::PointerType::getUnqual(
+    llvm::ArrayType::get(jbyte_type(), sizeof(JavaThread)));
 
-  _zeroStack_type = PointerType::getUnqual(
-    ArrayType::get(jbyte_type(), sizeof(ZeroStack)));
+  _zeroStack_type = llvm::PointerType::getUnqual(
+    llvm::ArrayType::get(jbyte_type(), sizeof(ZeroStack)));
 
-  std::vector<Type*> params;
+  std::vector<llvm::Type*> params;
   params.push_back(Method_type());
   params.push_back(intptr_type());
   params.push_back(thread_type());
-  _entry_point_type = FunctionType::get(jint_type(), params, false);
+  _entry_point_type = llvm::FunctionType::get(jint_type(), params, false);
 
   params.clear();
   params.push_back(Method_type());
-  params.push_back(PointerType::getUnqual(jbyte_type()));
+  params.push_back(llvm::PointerType::getUnqual(jbyte_type()));
   params.push_back(intptr_type());
   params.push_back(thread_type());
-  _osr_entry_point_type = FunctionType::get(jint_type(), params, false);
+  _osr_entry_point_type = llvm::FunctionType::get(jint_type(), params, false);
 
   // Create mappings
   for (int i = 0; i < T_CONFLICT; i++) {
@@ -178,16 +177,16 @@ class SharkFreeQueueItem : public CHeapObj<mtNone> {
   }
 };
 
-void SharkContext::push_to_free_queue(Function* function) {
+void SharkContext::push_to_free_queue(llvm::Function* function) {
   _free_queue = new SharkFreeQueueItem(function, _free_queue);
 }
 
-Function* SharkContext::pop_from_free_queue() {
+llvm::Function* SharkContext::pop_from_free_queue() {
   if (_free_queue == NULL)
     return NULL;
 
   SharkFreeQueueItem *item = _free_queue;
-  Function *function = item->function();
+  llvm::Function *function = item->function();
   _free_queue = item->next();
   delete item;
   return function;

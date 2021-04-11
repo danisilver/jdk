@@ -56,15 +56,15 @@ class SharkBuilder : public llvm::IRBuilder<> {
  public:
   llvm::LoadInst* CreateAtomicLoad(llvm::Value* ptr,
                                    unsigned align = HeapWordSize,
-                                   llvm::AtomicOrdering ordering = llvm::SequentiallyConsistent,
-                                   llvm::SynchronizationScope synchScope = llvm::CrossThread,
+                                   llvm::AtomicOrdering ordering = llvm::AtomicOrdering::SequentiallyConsistent,
+                                   llvm::SyncScope::ID synchScope = llvm::SyncScope::System,
                                    bool isVolatile = true,
                                    const char *name = "");
   llvm::StoreInst* CreateAtomicStore(llvm::Value *val,
                                      llvm::Value *ptr,
                                      unsigned align = HeapWordSize,
-                                     llvm::AtomicOrdering ordering = llvm::SequentiallyConsistent,
-                                     llvm::SynchronizationScope SynchScope = llvm::CrossThread,
+                                     llvm::AtomicOrdering ordering = llvm::AtomicOrdering::SequentiallyConsistent,
+                                     llvm::SyncScope::ID SynchScope = llvm::SyncScope::System,
                                      bool isVolatile = true,
                                      const char *name = "");
 
@@ -99,10 +99,11 @@ class SharkBuilder : public llvm::IRBuilder<> {
                                   const char*  name = "");
 
   // Helpers for creating intrinsics and external functions.
+  static llvm::FunctionType* make_ftype(const char* params,
+                                        const char* ret);
+
  private:
   static llvm::Type* make_type(char type, bool void_ok);
-  static llvm::FunctionType* make_ftype(const char* params,
-                                              const char* ret);
   llvm::Value* make_function(const char* name,
                              const char* params,
                              const char* ret);

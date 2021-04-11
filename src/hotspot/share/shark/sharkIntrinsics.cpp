@@ -192,7 +192,11 @@ void SharkIntrinsics::do_Math_1to1(Value *function) {
   state()->push(
     SharkValue::create_jdouble(
       builder()->CreateCall(
-        function, state()->pop()->jdouble_value())));
+        llvm::FunctionType::get(
+          SharkType::jdouble_type(), 
+          llvm::makeArrayRef<llvm::Type*>(SharkType::jdouble_type()), 
+          false),
+        function, llvm::makeArrayRef<llvm::Value*>(state()->pop()->jdouble_value()))));
   state()->push(NULL);
 }
 
@@ -204,9 +208,16 @@ void SharkIntrinsics::do_Math_2to1(Value *function) {
   assert(empty == NULL, "should be");
   Value *x = state()->pop()->jdouble_value();
 
+  llvm::Type *typejdouble = SharkType::jdouble_type();
+  std::vector<llvm::Type*> types = {typejdouble,typejdouble};
+  std::vector<llvm::Value*> vals = {x, y};
   state()->push(
     SharkValue::create_jdouble(
-      builder()->CreateCall2(function, x, y)));
+      builder()->CreateCall(
+       llvm::FunctionType::get(
+         SharkType::jdouble_type(),
+	 llvm::makeArrayRef<llvm::Type*>(types), false),
+       function, llvm::makeArrayRef<llvm::Value*>(vals))));
   state()->push(NULL);
 }
 
@@ -230,7 +241,9 @@ void SharkIntrinsics::do_Object_getClass() {
 void SharkIntrinsics::do_System_currentTimeMillis() {
   state()->push(
     SharkValue::create_jlong(
-      builder()->CreateCall(builder()->current_time_millis()),
+      builder()->CreateCall(
+       llvm::FunctionType::get(SharkType::jdouble_type(), false),
+       builder()->current_time_millis()),
       false));
   state()->push(NULL);
 }
@@ -257,8 +270,12 @@ void SharkIntrinsics::do_Unsafe_compareAndSwapInt() {
 
   // Convert the offset
   offset = builder()->CreateCall(
+    llvm::FunctionType::get(
+     SharkType::jlong_type(), 
+     llvm::makeArrayRef<llvm::Type*>(SharkType::jlong_type()),
+     false),
     builder()->unsafe_field_offset_to_byte_offset(),
-    offset);
+    llvm::makeArrayRef<llvm::Value*>(offset));
 
   // Locate the field
   Value *addr = builder()->CreateIntToPtr(
@@ -269,7 +286,10 @@ void SharkIntrinsics::do_Unsafe_compareAndSwapInt() {
     "addr");
 
   // Perform the operation
-  Value *result = builder()->CreateAtomicCmpXchg(addr, e, x, llvm::SequentiallyConsistent);
+  Value *result = builder()->CreateAtomicCmpXchg(
+   addr, e, x, 
+   llvm::AtomicOrdering::SequentiallyConsistent, 
+   llvm::AtomicOrdering::SequentiallyConsistent);
   // Push the result
   state()->push(
     SharkValue::create_jint(

@@ -36,7 +36,7 @@
 #endif
 
 
-#include <llvm/Analysis/Verifier.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
  
 // includes specific to each version
@@ -74,10 +74,8 @@
 // common includes
 #include <llvm/Support/Threading.h>
 #include <llvm/Support/TargetSelect.h>
-#include <llvm/ExecutionEngine/JITMemoryManager.h>
 #include <llvm/Support/CommandLine.h>
-#include <llvm/ExecutionEngine/MCJIT.h>
-#include <llvm/ExecutionEngine/JIT.h>
+#include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/ADT/StringMap.h>
 #include <llvm/Support/Debug.h>
 #include <llvm/Support/Host.h>

@@ -673,12 +673,12 @@ void SharkBlock::parse_bytecode(int start, int limit) {
     case Bytecodes::_f2i:
       push(SharkValue::create_jint(
         builder()->CreateCall(
-          builder()->f2i(), pop()->jfloat_value()), false));
+          builder()->make_ftype("f", "i"), builder()->f2i(), pop()->jfloat_value()), false));
       break;
     case Bytecodes::_f2l:
       push(SharkValue::create_jlong(
         builder()->CreateCall(
-          builder()->f2l(), pop()->jfloat_value()), false));
+          builder()->make_ftype("f", "l"), builder()->f2l(), pop()->jfloat_value()), false));
       break;
     case Bytecodes::_f2d:
       push(SharkValue::create_jdouble(
@@ -689,12 +689,12 @@ void SharkBlock::parse_bytecode(int start, int limit) {
     case Bytecodes::_d2i:
       push(SharkValue::create_jint(
         builder()->CreateCall(
-          builder()->d2i(), pop()->jdouble_value()), false));
+          builder()->make_ftype("d", "i"), builder()->d2i(), pop()->jdouble_value()), false));
       break;
     case Bytecodes::_d2l:
       push(SharkValue::create_jlong(
         builder()->CreateCall(
-          builder()->d2l(), pop()->jdouble_value()), false));
+          builder()->make_ftype("d", "l"), builder()->d2l(), pop()->jdouble_value()), false));
       break;
     case Bytecodes::_d2f:
       push(SharkValue::create_jfloat(

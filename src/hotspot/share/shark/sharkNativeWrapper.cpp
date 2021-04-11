@@ -213,6 +213,7 @@ void SharkNativeWrapper::initialize(const char *name) {
      PointerType::getUnqual(
        FunctionType::get(return_type, param_types, false)));
   Value *result = builder()->CreateCall(
+    FunctionType::get(return_type, param_types, false),
     native_function, llvm::makeArrayRef(param_values));
 
   // Start the transition back to _thread_in_Java
@@ -221,7 +222,7 @@ void SharkNativeWrapper::initialize(const char *name) {
   // Make sure new state is visible in the GC thread
   if (os::is_MP()) {
 //  if (UseMembar) //UseMembar se usa siempre desde que se dejo de usar mprotect
-      builder()->CreateFence(llvm::SequentiallyConsistent, llvm::CrossThread);
+      builder()->CreateFence(llvm::AtomicOrdering::SequentiallyConsistent, llvm::SyncScope::System);
 //  else
 //    CreateWriteMemorySerializePage();
   }
@@ -260,7 +261,8 @@ void SharkNativeWrapper::initialize(const char *name) {
 
   builder()->SetInsertPoint(do_safepoint);
   builder()->CreateCall(
-    builder()->check_special_condition_for_native_trans(), thread);
+    builder()->make_ftype("T", "v"),
+    builder()->check_special_condition_for_native_trans(), llvm::makeArrayRef<llvm::Value*>(thread));
   builder()->CreateBr(safepointed);
 
   // Finally we can change the thread state to _thread_in_Java

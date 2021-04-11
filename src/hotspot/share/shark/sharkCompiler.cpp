@@ -39,7 +39,6 @@
 #include "shark/sharkContext.hpp"
 #include "shark/sharkEntry.hpp"
 #include "shark/sharkFunction.hpp"
-#include "shark/sharkMemoryManager.hpp"
 #include "shark/sharkNativeWrapper.hpp"
 #include "shark/shark_globals.hpp"
 #include "utilities/debug.hpp"
@@ -65,78 +64,34 @@ SharkCompiler::SharkCompiler()
   _execution_engine_lock = new Monitor(Mutex::leaf, "SharkExecutionEngineLock");
   MutexLocker locker(execution_engine_lock());
 
-  // Make LLVM safe for multithreading
-  if (!llvm_start_multithreaded())
-    fatal("llvm_start_multithreaded() failed");
-
   // Initialize the native target
   InitializeNativeTarget();
 
   // MCJIT require a native AsmPrinter
   InitializeNativeTargetAsmPrinter();
 
-  // Create the two contexts which we'll use
-  _normal_context = new SharkContext("normal");
-  _native_context = new SharkContext("native");
+  auto nptr = std::make_unique<SharkContext>("normal");
+  _normal_context = nptr.get();
+  auto sptr = std::make_unique<SharkContext>("native");
+  _native_context = sptr.get();
 
-  // Create the memory manager
-  _memory_manager = new SharkMemoryManager();
+  auto J = llvm::orc::LLJITBuilder().create();
+  if (auto err = J.takeError()) {
+    printf("Unknown error while creating Shark JIT\n");
+    exit(1);
+  } 
+  _execution_engine = std::move(*J);
+  std::unique_ptr<llvm::Module> uptr_modnormal(_normal_context->module());
+  std::unique_ptr<llvm::Module> uptr_modnative(_native_context->module());
+  auto normalE = execution_engine()->addIRModule(
+    llvm::orc::ThreadSafeModule(std::move(uptr_modnormal), std::move(nptr)));
+  auto nativeE = execution_engine()->addIRModule(
+    llvm::orc::ThreadSafeModule(std::move(uptr_modnative), std::move(sptr)));
 
-  // Finetune LLVM for the current host CPU.
-  StringMap<bool> Features;
-  bool gotCpuFeatures = llvm::sys::getHostCPUFeatures(Features);
-  std::string cpu("-mcpu=" + llvm::sys::getHostCPUName());
-
-  std::vector<const char*> args;
-  args.push_back(""); // program name
-  args.push_back(cpu.c_str());
-
-  std::string mattr("-mattr=");
-  if(gotCpuFeatures){
-    for(StringMap<bool>::iterator I = Features.begin(),
-      E = Features.end(); I != E; ++I){
-      if(I->second){
-        std::string attr(I->first());
-        mattr+="+"+attr+",";
-      }
-    }
-    args.push_back(mattr.c_str());
-  }
-
-  args.push_back(0);  // terminator
-  cl::ParseCommandLineOptions(args.size() - 1, (char **) &args[0]);
-
-  // Create the JIT
-  std::string ErrorMsg;
-
-  EngineBuilder builder(_normal_context->module());
-  builder.setMCPU(MCPU);
-  builder.setMAttrs(MAttrs);
-  builder.setJITMemoryManager(memory_manager());
-  builder.setEngineKind(EngineKind::JIT);
-  builder.setErrorStr(&ErrorMsg);
-  if (! fnmatch(SharkOptimizationLevel, "None", 0)) {
-    tty->print_cr("Shark optimization level set to: None");
-    builder.setOptLevel(llvm::CodeGenOpt::None);
-  } else if (! fnmatch(SharkOptimizationLevel, "Less", 0)) {
-    tty->print_cr("Shark optimization level set to: Less");
-    builder.setOptLevel(llvm::CodeGenOpt::Less);
-  } else if (! fnmatch(SharkOptimizationLevel, "Aggressive", 0)) {
-    tty->print_cr("Shark optimization level set to: Aggressive");
-    builder.setOptLevel(llvm::CodeGenOpt::Aggressive);
-  } // else Default is selected by, well, default :-)
-  _execution_engine = builder.create();
-
-  if (!execution_engine()) {
-    if (!ErrorMsg.empty())
-      printf("Error while creating Shark JIT: %s\n",ErrorMsg.c_str());
-    else
-      printf("Unknown error while creating Shark JIT\n");
+  if (normalE || nativeE) {
+    printf("Unknown error while creating Shark IR Modules\n");
     exit(1);
   }
-
-  execution_engine()->addModule(_native_context->module());
-
   // All done
   set_state(initialized);
 }
@@ -296,12 +251,17 @@ void SharkCompiler::generate_native_code(SharkEntry* entry,
         llvm::DebugFlag = false;
       }
     }
-#ifdef setCurrentDebugType
+#ifdef setCurrentDebugType 
 #undef setCurrentDebugType
 #endif
 #endif // !NDEBUG
-    memory_manager()->set_entry_for_function(function, entry);
-    code = (address) execution_engine()->getPointerToFunction(function);
+    auto symbol = execution_engine()->lookup(name);
+    if(symbol.takeError()){
+      code = NULL;
+    } else {
+      llvm::JITEvaluatedSymbol symb = *symbol;
+      code = (address) symb.getAddress();
+    }
   }
   assert(code != NULL, "code must be != NULL");
   entry->set_entry_point(code);
@@ -339,14 +299,15 @@ void SharkCompiler::free_queued_methods() {
   // The free queue is protected by the execution engine lock
   assert(execution_engine_lock()->owned_by_self(), "should be");
 
-  while (true) {
-    Function *function = context()->pop_from_free_queue();
-    if (function == NULL)
-      break;
-
-    execution_engine()->freeMachineCodeForFunction(function);
-    function->eraseFromParent();
-  }
+//  TODO: como eliminamos los metodos generados?
+//  while (true) {
+//    Function *function = context()->pop_from_free_queue();
+//    if (function == NULL)
+//      break;
+//
+//    execution_engine()->freeMachineCodeForFunction(function);
+//    function->eraseFromParent();
+//  }
 }
 
 const char* SharkCompiler::methodname(const char* klass, const char* method) {

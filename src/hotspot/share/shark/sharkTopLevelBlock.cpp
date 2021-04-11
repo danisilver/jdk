@@ -606,8 +606,11 @@ void SharkTopLevelBlock::marshal_exception_fast(int num_options) {
     builder()->SetInsertPoint(not_exact);
     builder()->CreateCondBr(
       builder()->CreateICmpNE(
-        builder()->CreateCall2(
-          builder()->is_subtype_of(), check_klass, exception_klass),
+        builder()->CreateCall(
+	  builder()->make_ftype("KK", "c"),
+          builder()->is_subtype_of(), 
+	  llvm::makeArrayRef(
+	    std::vector<llvm::Value*>({check_klass, exception_klass}))),
         LLVMValue::jbyte_constant(0)),
       handler_for_exception(i), not_subtype);
 
@@ -753,10 +756,13 @@ BasicBlock* SharkTopLevelBlock::make_trap(int trap_bci, int trap_request) {
 void SharkTopLevelBlock::do_trap(int trap_request) {
   decache_for_trap();
   builder()->CreateRet(
-    builder()->CreateCall2(
+    builder()->CreateCall(
+      builder()->make_ftype("Ti", "i"),
       builder()->uncommon_trap(),
-      thread(),
-      LLVMValue::jint_constant(trap_request)));
+      llvm::makeArrayRef<llvm::Value*>(
+        std::vector<llvm::Value*>({thread(),
+        LLVMValue::jint_constant(trap_request)}))
+      ));
 }
 
 void SharkTopLevelBlock::call_register_finalizer(Value *receiver) {
@@ -1365,8 +1371,10 @@ void SharkTopLevelBlock::do_call() {
 
   // Make the call
   decache_for_Java_call(call_method);
-  Value *deoptimized_frames = builder()->CreateCall3(
-    entry_point, callee, base_pc, thread());
+  Value *deoptimized_frames = builder()->CreateCall(
+    SharkType::entry_point_type(),
+    entry_point, llvm::makeArrayRef<llvm::Value*>(
+      std::vector<llvm::Value*>({callee, base_pc, thread()})));
 
   // If the callee got deoptimized then reexecute in the interpreter
   BasicBlock *reexecute      = function()->CreateBlock("reexecute");
@@ -1376,10 +1384,14 @@ void SharkTopLevelBlock::do_call() {
     reexecute, call_completed);
 
   builder()->SetInsertPoint(reexecute);
-  builder()->CreateCall2(
+  builder()->CreateCall(
+    builder()->make_ftype("iT", "v"),
     builder()->deoptimized_entry_point(),
-    builder()->CreateSub(deoptimized_frames, LLVMValue::jint_constant(1)),
-    thread());
+    llvm::makeArrayRef<llvm::Value*>(
+      std::vector<llvm::Value*>({
+	      builder()->CreateSub(deoptimized_frames, LLVMValue::jint_constant(1)),
+	      thread()}))
+    );
   builder()->CreateBr(call_completed);
 
   // Cache after the call
@@ -1543,8 +1555,11 @@ void SharkTopLevelBlock::do_full_instance_check(ciKlass* klass) {
   builder()->SetInsertPoint(subtype_check);
   builder()->CreateCondBr(
     builder()->CreateICmpNE(
-      builder()->CreateCall2(
-        builder()->is_subtype_of(), check_klass, object_klass),
+      builder()->CreateCall(
+	builder()->make_ftype("KK", "c"),
+        builder()->is_subtype_of(), 
+	llvm::makeArrayRef<llvm::Value*>(
+	  std::vector<llvm::Value*>({check_klass, object_klass}))),
       LLVMValue::jbyte_constant(0)),
     is_instance, not_instance);
 
@@ -1735,7 +1750,10 @@ void SharkTopLevelBlock::do_new() {
     heap_object = builder()->CreateIntToPtr(
       old_top, SharkType::oop_type(), "heap_object");
 
-    Value *check = builder()->CreateAtomicCmpXchg(top_addr, old_top, new_top, llvm::SequentiallyConsistent);
+    Value *check = builder()->CreateAtomicCmpXchg(
+      top_addr, old_top, new_top, 
+      llvm::AtomicOrdering::SequentiallyConsistent, 
+      llvm::AtomicOrdering::SequentiallyConsistent);
     builder()->CreateCondBr(
       builder()->CreateICmpEQ(old_top, check),
       initialize, retry);
@@ -1936,7 +1954,9 @@ void SharkTopLevelBlock::acquire_lock(Value *lockee, int exception_action) {
 
   Value *lock = builder()->CreatePtrToInt(
     monitor_header_addr, SharkType::intptr_type());
-  Value *check = builder()->CreateAtomicCmpXchg(mark_addr, disp, lock, llvm::Acquire);
+  Value *check = builder()->CreateAtomicCmpXchg(
+    mark_addr, disp, lock, 
+    llvm::AtomicOrdering::Acquire, llvm::AtomicOrdering::Acquire);
   builder()->CreateCondBr(
     builder()->CreateICmpEQ(disp, check),
     acquired_fast, try_recursive);
@@ -2021,7 +2041,9 @@ void SharkTopLevelBlock::release_lock(int exception_action) {
     PointerType::getUnqual(SharkType::intptr_type()),
     "mark_addr");
 
-  Value *check = builder()->CreateAtomicCmpXchg(mark_addr, lock, disp, llvm::Release);
+  Value *check = builder()->CreateAtomicCmpXchg(
+    mark_addr, lock, disp, 
+    llvm::AtomicOrdering::Release, llvm::AtomicOrdering::Release);
   builder()->CreateCondBr(
     builder()->CreateICmpEQ(lock, check),
     released_fast, slow_path);

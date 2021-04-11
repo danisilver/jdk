@@ -288,9 +288,18 @@ class SharkTopLevelBlock : public SharkBlock {
                           llvm::Value** args_start,
                           llvm::Value** args_end,
                           int           exception_action) {
+    llvm::Value *act = *args_start;
+    std::vector<llvm::Type *> typesVect;
+    while(act != *args_end){
+      typesVect.push_back(act->getType());
+      act++;
+    }
     decache_for_VM_call();
     stack()->CreateSetLastJavaFrame();
-    llvm::CallInst *res = builder()->CreateCall(callee, llvm::makeArrayRef(args_start, args_end));
+    llvm::CallInst *res = builder()->CreateCall(
+      llvm::FunctionType::get(callee->getType(), llvm::makeArrayRef(typesVect), false), 
+      callee, 
+      llvm::makeArrayRef(args_start, args_end));
     stack()->CreateResetLastJavaFrame();
     cache_after_VM_call();
     if (exception_action & EAM_CHECK) {
