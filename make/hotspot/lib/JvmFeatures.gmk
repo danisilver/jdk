@@ -52,7 +52,7 @@ ifeq ($(call check-jvm-feature, zero), true)
   JVM_CFLAGS_FEATURES += -DZERO -DZERO_LIBARCH='"$(OPENJDK_TARGET_CPU_LEGACY_LIB)"' $(LIBFFI_CFLAGS)
   #JVM_CFLAGS_FEATURES += -DSHARK -DSHARK_LLVM_VERSION=34 $(shell llvm-config --cflags)
   JVM_CFLAGS_FEATURES += -DSHARK -DSHARK_LLVM_VERSION=34 -I/usr/local/include -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS 
-  JVM_LDFLAGS_FEATURES += $(shell llvm-config --ldflags) 
+  JVM_LDFLAGS_FEATURES += $(shell llvm-config --ldflags) -lz
   JVM_LIBS_FEATURES += $(shell llvm-config --libs) 
   JVM_LIBS_FEATURES += $(LIBFFI_LIBS)
   ifeq ($(ENABLE_LIBFFI_BUNDLING), true)

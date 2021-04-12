@@ -284,7 +284,8 @@ class SharkTopLevelBlock : public SharkBlock {
 
   // VM calls
  private:
-  llvm::CallInst* call_vm(llvm::Value*  callee,
+  llvm::CallInst* call_vm(llvm::Type*   retType,
+		          llvm::Value*  callee,
                           llvm::Value** args_start,
                           llvm::Value** args_end,
                           int           exception_action) {
@@ -297,7 +298,7 @@ class SharkTopLevelBlock : public SharkBlock {
     decache_for_VM_call();
     stack()->CreateSetLastJavaFrame();
     llvm::CallInst *res = builder()->CreateCall(
-      llvm::FunctionType::get(callee->getType(), llvm::makeArrayRef(typesVect), false), 
+      llvm::FunctionType::get(retType, llvm::makeArrayRef(typesVect), false), 
       callee, 
       llvm::makeArrayRef(args_start, args_end));
     stack()->CreateResetLastJavaFrame();
@@ -310,31 +311,35 @@ class SharkTopLevelBlock : public SharkBlock {
   }
 
  public:
-  llvm::CallInst* call_vm(llvm::Value* callee,
+  llvm::CallInst* call_vm(llvm::Type* retType, 
+                          llvm::Value* callee,
                           int          exception_action) {
     llvm::Value *args[] = {thread()};
-    return call_vm(callee, args, args + 1, exception_action);
+    return call_vm(retType, callee, args, args + 1, exception_action);
   }
-  llvm::CallInst* call_vm(llvm::Value* callee,
+  llvm::CallInst* call_vm(llvm::Type* retType,
+                          llvm::Value* callee,
                           llvm::Value* arg1,
                           int          exception_action) {
     llvm::Value *args[] = {thread(), arg1};
-    return call_vm(callee, args, args + 2, exception_action);
+    return call_vm(retType, callee, args, args + 2, exception_action);
   }
-  llvm::CallInst* call_vm(llvm::Value* callee,
+  llvm::CallInst* call_vm(llvm::Type* retType, 
+                          llvm::Value* callee,
                           llvm::Value* arg1,
                           llvm::Value* arg2,
                           int          exception_action) {
     llvm::Value *args[] = {thread(), arg1, arg2};
-    return call_vm(callee, args, args + 3, exception_action);
+    return call_vm(retType, callee, args, args + 3, exception_action);
   }
-  llvm::CallInst* call_vm(llvm::Value* callee,
+  llvm::CallInst* call_vm(llvm::Type* retType,
+                          llvm::Value* callee,
                           llvm::Value* arg1,
                           llvm::Value* arg2,
                           llvm::Value* arg3,
                           int          exception_action) {
     llvm::Value *args[] = {thread(), arg1, arg2, arg3};
-    return call_vm(callee, args, args + 4, exception_action);
+    return call_vm(retType, callee, args, args + 4, exception_action);
   }
 
   // VM call oop return handling

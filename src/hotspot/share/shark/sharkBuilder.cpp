@@ -235,9 +235,7 @@ llvm::Value* SharkBuilder::register_finalizer() {
 }
 
 llvm::Value* SharkBuilder::safepoint() {
-  //TODO:es la funcion correcta?
   return make_function((address) SafepointSynchronize::block, "T", "v");
-  //return make_function((address) ThreadSafepointState::create, "T", "v");
 }
 
 llvm::Value* SharkBuilder::throw_ArithmeticException() {

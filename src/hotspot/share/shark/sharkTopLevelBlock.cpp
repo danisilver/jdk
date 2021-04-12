@@ -407,6 +407,7 @@ void SharkTopLevelBlock::zero_check_value(SharkValue* value,
   builder()->SetInsertPoint(zero_block);
   if (value->is_jobject()) {
     call_vm(
+      builder()->make_ftype("TCi", "v"),
       builder()->throw_NullPointerException(),
       builder()->CreateIntToPtr(
         LLVMValue::intptr_constant((intptr_t) __FILE__),
@@ -416,6 +417,7 @@ void SharkTopLevelBlock::zero_check_value(SharkValue* value,
   }
   else {
     call_vm(
+      builder()->make_ftype("TCi", "v"),
       builder()->throw_ArithmeticException(),
       builder()->CreateIntToPtr(
         LLVMValue::intptr_constant((intptr_t) __FILE__),
@@ -443,6 +445,7 @@ void SharkTopLevelBlock::check_bounds(SharkValue* array, SharkValue* index) {
   SharkState *saved_state = current_state()->copy();
 
   call_vm(
+    builder()->make_ftype("TCii", "v"),
     builder()->throw_ArrayIndexOutOfBoundsException(),
     builder()->CreateIntToPtr(
       LLVMValue::intptr_constant((intptr_t) __FILE__),
@@ -624,6 +627,7 @@ void SharkTopLevelBlock::marshal_exception_slow(int num_options) {
     indexes[i] = exc_handler(i)->catch_klass_index();
 
   Value *index = call_vm(
+    builder()->make_ftype("TIi", "i"),
     builder()->find_exception_handler(),
     builder()->CreateInlineData(
       indexes,
@@ -684,7 +688,7 @@ void SharkTopLevelBlock::maybe_add_safepoint() {
     do_safepoint, safepointed);
 
   builder()->SetInsertPoint(do_safepoint);
-  call_vm(builder()->safepoint(), EX_CHECK_FULL);
+  call_vm(builder()->make_ftype("T", "v"), builder()->safepoint(), EX_CHECK_FULL);
   BasicBlock *safepointed_block = builder()->GetInsertBlock();
   builder()->CreateBr(safepointed);
 
@@ -793,7 +797,7 @@ void SharkTopLevelBlock::call_register_finalizer(Value *receiver) {
     do_call, done);
 
   builder()->SetInsertPoint(do_call);
-  call_vm(builder()->register_finalizer(), receiver, EX_CHECK_FULL);
+  call_vm(builder()->make_ftype("TO", "v"), builder()->register_finalizer(), receiver, EX_CHECK_FULL);
   BasicBlock *branch_block = builder()->GetInsertBlock();
   builder()->CreateBr(done);
 
@@ -1601,6 +1605,7 @@ void SharkTopLevelBlock::do_full_instance_check(ciKlass* klass) {
     SharkState *saved_state = current_state()->copy();
 
     call_vm(
+      builder()->make_ftype("TCi", "v"),
       builder()->throw_ClassCastException(),
       builder()->CreateIntToPtr(
         LLVMValue::intptr_constant((intptr_t) __FILE__),
@@ -1810,6 +1815,7 @@ void SharkTopLevelBlock::do_new() {
 
   // The slow path
   call_vm(
+    builder()->make_ftype("Ti", "v"),
     builder()->new_instance(),
     LLVMValue::jint_constant(iter()->get_klass_index()),
     EX_CHECK_FULL);
@@ -1839,6 +1845,7 @@ void SharkTopLevelBlock::do_newarray() {
   BasicType type = (BasicType) iter()->get_index();
 
   call_vm(
+    builder()->make_ftype("Tii", "v"),
     builder()->newarray(),
     LLVMValue::jint_constant(type),
     pop()->jint_value(),
@@ -1859,6 +1866,7 @@ void SharkTopLevelBlock::do_anewarray() {
   }
 
   call_vm(
+    builder()->make_ftype("Tii", "v"),
     builder()->anewarray(),
     LLVMValue::jint_constant(iter()->get_klass_index()),
     pop()->jint_value(),
@@ -1889,6 +1897,7 @@ void SharkTopLevelBlock::do_multianewarray() {
   }
 
   call_vm(
+    builder()->make_ftype("TiiI", "v"),
     builder()->multianewarray(),
     LLVMValue::jint_constant(iter()->get_klass_index()),
     LLVMValue::jint_constant(ndims),
@@ -2001,6 +2010,7 @@ void SharkTopLevelBlock::acquire_lock(Value *lockee, int exception_action) {
   // It's not a recursive case so we need to drop into the runtime
   builder()->SetInsertPoint(not_recursive);
   call_vm(
+    builder()->make_ftype("TM", "v"),
     builder()->monitorenter(), monitor_addr,
     exception_action | EAM_MONITOR_FUDGE);
   BasicBlock *acquired_slow = builder()->GetInsertBlock();
@@ -2055,7 +2065,7 @@ void SharkTopLevelBlock::release_lock(int exception_action) {
 
   // Need to drop into the runtime to release this one
   builder()->SetInsertPoint(slow_path);
-  call_vm(builder()->monitorexit(), monitor_addr, exception_action);
+  call_vm(builder()->make_ftype("TM", "v"), builder()->monitorexit(), monitor_addr, exception_action);
   BasicBlock *released_slow = builder()->GetInsertBlock();
   builder()->CreateBr(lock_released);
 

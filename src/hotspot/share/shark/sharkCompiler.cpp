@@ -44,6 +44,8 @@
 #include "utilities/debug.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "prims/jvmtiExport.hpp"
+#include <llvm/IR/Value.h>
+#include <llvm/Support/raw_ostream.h>
 
 #include <fnmatch.h>
 
@@ -220,8 +222,13 @@ void SharkCompiler::generate_native_code(SharkEntry* entry,
                                          const char* name) {
   // Print the LLVM bitcode, if requested
   if (SharkPrintBitcodeOf != NULL) {
-    if (!fnmatch(SharkPrintBitcodeOf, name, 0))
-      function->dump();
+    if (!fnmatch(SharkPrintBitcodeOf, name, 0)){
+      std::string strIR;
+      llvm::raw_string_ostream OS(strIR);
+      OS << *function;
+      OS.flush();
+      tty->print_cr("%s", strIR.c_str());
+    }
   }
 
   if (SharkVerifyFunction != NULL) {
