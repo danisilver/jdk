@@ -82,6 +82,8 @@ SharkCompiler::SharkCompiler()
     printf("Unknown error while creating Shark JIT\n");
     exit(1);
   } 
+  IRTransform optimizeTransform(J->getExecutionSession(), optimize);
+  J->addIRTransform(optimizeTransform);
   _execution_engine = std::move(*J);
   std::unique_ptr<llvm::Module> uptr_modnormal(_normal_context->module());
   std::unique_ptr<llvm::Module> uptr_modnative(_native_context->module());
@@ -270,6 +272,8 @@ void SharkCompiler::generate_native_code(SharkEntry* entry,
       code = (address) symb.getAddress();
     }
   }
+  auto RT = execution_engine()->getMainJITDylib().createResourceTracker();
+  entry->set_RT(RT);
   assert(code != NULL, "code must be != NULL");
   entry->set_entry_point(code);
   entry->set_function(function);
@@ -299,22 +303,20 @@ void SharkCompiler::free_compiled_method(address code) {
   assert_locked_or_safepoint(CodeCache_lock);
 
   SharkEntry *entry = (SharkEntry *) code;
-  entry->context()->push_to_free_queue(entry->function());
+  entry->context()->push_to_free_queue(entry, entry->function());
 }
 
 void SharkCompiler::free_queued_methods() {
   // The free queue is protected by the execution engine lock
   assert(execution_engine_lock()->owned_by_self(), "should be");
 
-//  TODO: como eliminamos los metodos generados?
-//  while (true) {
-//    Function *function = context()->pop_from_free_queue();
-//    if (function == NULL)
-//      break;
-//
-//    execution_engine()->freeMachineCodeForFunction(function);
-//    function->eraseFromParent();
-//  }
+  while (true) {
+    SharkFreeQueueItem *item = context()->peek();
+    if (item == NULL)
+      break;
+    item->entry()->get_RT()->remove();
+    context()->pop();
+  }
 }
 
 const char* SharkCompiler::methodname(const char* klass, const char* method) {

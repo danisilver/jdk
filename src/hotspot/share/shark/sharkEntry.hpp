@@ -36,6 +36,7 @@ class SharkEntry : public ZeroEntry {
   address         _code_limit;
   SharkContext*   _context;
   llvm::Function* _function;
+  llvm::orc::ResourceTrackerSP _rt;
 
  public:
   address code_start() const {
@@ -50,6 +51,9 @@ class SharkEntry : public ZeroEntry {
   llvm::Function* function() const {
     return _function;
   }
+  llvm::orc::ResourceTrackerSP get_RT() {
+    return _rt;
+  }
 
  public:
   void set_code_limit(address code_limit) {
@@ -60,6 +64,9 @@ class SharkEntry : public ZeroEntry {
   }
   void set_function(llvm::Function* function) {
     _function = function;
+  }
+  void set_RT(llvm::orc::ResourceTrackerSP RT) {
+    _rt = RT;
   }
 };
 

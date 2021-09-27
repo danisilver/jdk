@@ -161,14 +161,18 @@ SharkContext::SharkContext(const char* name)
 
 class SharkFreeQueueItem : public CHeapObj<mtNone> {
  public:
-  SharkFreeQueueItem(llvm::Function* function, SharkFreeQueueItem *next)
-    : _function(function), _next(next) {}
+  SharkFreeQueueItem(SharkEntry entry, llvm::Function* function, SharkFreeQueueItem *next)
+    : _entry(entry), _function(function), _next(next) {}
 
  private:
+  SharkEntry          _entry;
   llvm::Function*     _function;
   SharkFreeQueueItem* _next;
 
  public:
+  SharkEntry entry() const {
+    return _entry;
+  }
   llvm::Function* function() const {
     return _function;
   }
@@ -190,4 +194,17 @@ llvm::Function* SharkContext::pop_from_free_queue() {
   _free_queue = item->next();
   delete item;
   return function;
+}
+llvm::Function* SharkContext::peek() {
+  if (_free_queue == NULL)
+    return NULL;
+  return _free_queue;
+}
+llvm::Function* SharkContext::pop() {
+  if (_free_queue == NULL)
+    return NULL;
+  SharkFreeQueueItem *item = _free_queue;
+  _free_queue = item->next();
+  delete item;
+  return _free_queue;
 }

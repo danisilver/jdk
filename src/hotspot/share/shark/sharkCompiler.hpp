@@ -118,6 +118,15 @@ class SharkCompiler : public AbstractCompiler {
     return (SharkCompiler *) compiler;
   }
 
+  static optimize(MaterializationUnit mu) {
+	  PassManager pm;
+	  pm.addPass(JumpThreadingPass());
+	  pm.addPass(LoopDeletion());
+	  pm.addPass(LoopUnrollPass());
+	  pm.addPass(LoopUnrollPass());
+	  mu.run();
+  }
+
   // Helpers
  private:
   static const char* methodname(const char* klass, const char* method);
